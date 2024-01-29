@@ -5,9 +5,17 @@
 # O cliente deve receber via wpp todas essas informações.
 import openpyxl
 import customtkinter as custom
-import webbrowser as web
 from time import sleep
-import pyautogui as pg
+from selenium import webdriver
+from selenium.webdriver.chrome.service import Service
+from webdriver_manager.chrome import ChromeDriverManager
+
+service = Service(ChromeDriverManager().install())
+opcoes = webdriver.ChromeOptions()
+opcoes.add_experimental_option("detach", True)
+
+navegador = webdriver.Chrome(service=service, options=opcoes)
+navegador.get("https://web.whatsapp.com/")
 
 def confirma_exclusao():
     linhas = sheet_pedidos.max_row
@@ -40,34 +48,34 @@ def excluir_pedidos():
 
 def pegar_dados():
     nome = nome_entry.get()
-    telefone = telefone_entry.get()
+    DDD = DDD_entry.get().removeprefix('0').replace(' ', '')
+    telefone = telefone_entry.get().replace(' ', '')
     pedido = pedido_entry.get("0.0", "end")
     obs = obs_entry.get()
     endereco = endereco_entry.get("0.0", "end")
-    sheet_pedidos.append((nome,telefone,pedido,obs,endereco))
+    referencia = referencia_entry.get()
+    sheet_pedidos.append((nome,DDD+telefone,pedido,obs,endereco, referencia))
     excel_pedidos.save('pedidos.xlsx')
     
 # Interação whatsapp
-# link personalizado: https://api.whatsapp.com/send?phone=PAÍSDDDtelefone&text=TEXTO
+# link personalizado: https://web.whatsapp.com/send?phone=PAÍSDDDtelefone&text=TEXTO
 # %0A -> função enter; %20 -> função espaço; *negrito*; _italico_; ~tachado~
     text = f"""
 *Nome:* {nome}ENTER
 *Pedido:* {pedido}ENTER
 *Observações:* {obs}ENTER
-*Endereço de entrega:* {endereco}ENTER""".replace(" ", "%20").replace("ENTER", "%0A")
-    web.open(f"https://web.whatsapp.com/send?phone=55{telefone}&text={text}")
-    a = 0
-    while a == 0:
-        sleep(1)
+*Endereço de entrega:* {endereco}ENTER
+*Referência:* {referencia}ENTER""".replace(" ", "%20").replace("ENTER", "%0A")
+
+    navegador.get(f"https://web.whatsapp.com/send?phone=55{DDD}{telefone}&text={text}")
+    sleep(7)
+    loading = 1
+    while loading == 1:
         try:
-            x, y = pg.locateCenterOnScreen('./enviar.png')
-            sleep(2)
-            pg.click(x, y, button='LEFT')
-            sleep(2)
-            pg.hotkey('ctrl','w')
-            a = 1
+            navegador.find_element('xpath', '//*[@id="app"]/div/span[2]/div/span/div/div/div/div/div/div[3]')
         except:
-            print("carregando")    
+            loading = 0
+    navegador.find_element('xpath', '//*[@id="main"]/footer/div[1]/div/span[2]/div/div[2]/div[2]/button/span').click()
 
     pedido_salvo = custom.CTkToplevel()
     pedido_salvo.title("Confirmação")
@@ -91,6 +99,17 @@ janela.resizable(False, False)
 fonte_label = ('Tahoma bold', 15)
 fonte_entry = ('Tahoma', 12)
 
+# aviso para entrar no wpp primeiro
+aviso = custom.CTkToplevel(janela)
+aviso.geometry('450x100')
+aviso.title('AVISO')
+aviso.resizable(False, False)
+aviso.grab_set()
+t = custom.CTkLabel(aviso, text='Entre no whatsapp web antes de iniciar os registros.', font=fonte_label, text_color='RED')
+t.place(x=25,y=15)
+t = custom.CTkButton(aviso, fg_color='green', text="Ok", font=('Tahoma bold', 13), command=aviso.destroy)
+t.place(x=150,y=50)
+
 # Nome do cliente
 nome = custom.CTkLabel(janela, text="Nome do cliente:", font=fonte_label)
 nome.place(x=30,y=10)
@@ -100,8 +119,12 @@ nome_entry.place(x=160,y=10)
 # telefone para contato
 telefone = custom.CTkLabel(janela, text="Número para contato:", font=fonte_label)
 telefone.place(x=30,y=60)
-telefone_entry = custom.CTkEntry(janela, width=150, font=fonte_entry)
-telefone_entry.place(x=197,y=60)
+
+DDD_entry = custom.CTkEntry(janela, width=37, placeholder_text='DDD', font=fonte_entry)
+DDD_entry.place(x=197,y=60)
+
+telefone_entry = custom.CTkEntry(janela, width=150, placeholder_text='Número', font=fonte_entry)
+telefone_entry.place(x=245,y=60)
 
 # pedido
 pedido = custom.CTkLabel(janela, text="Pedido:", font=fonte_label)
