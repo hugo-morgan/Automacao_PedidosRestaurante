@@ -51,8 +51,22 @@ def pegar_dados():
     DDD = DDD_entry.get().removeprefix('0').replace(' ', '')
     telefone = telefone_entry.get().replace(' ', '')
     pedido = pedido_entry.get("0.0", "end")
+    # tratando pedido
+    pedido = pedido.split()
+    pedido_text = ''
+    for _ in pedido:
+        pedido_text = pedido_text + _ + '%0A'
+    pedido = pedido_text
+    ###------------------###
     obs = obs_entry.get()
     endereco = endereco_entry.get("0.0", "end")
+    # tratando endereco
+    endereco = endereco.split()
+    endereco_text = ''
+    for _ in endereco:
+        endereco_text = endereco_text + _ + '%0A'
+    endereco = endereco_text
+    ###------------------###
     referencia = referencia_entry.get()
     sheet_pedidos.append((nome,DDD+telefone,pedido,obs,endereco, referencia))
     excel_pedidos.save('pedidos.xlsx')
@@ -100,14 +114,14 @@ fonte_label = ('Tahoma bold', 15)
 fonte_entry = ('Tahoma', 12)
 
 # aviso para entrar no wpp primeiro
-aviso = custom.CTkToplevel(janela)
+aviso = custom.CTkToplevel()
 aviso.geometry('450x100')
 aviso.title('AVISO')
 aviso.resizable(False, False)
 aviso.grab_set()
 t = custom.CTkLabel(aviso, text='Entre no whatsapp web antes de iniciar os registros.', font=fonte_label, text_color='RED')
-t.place(x=25,y=15)
-t = custom.CTkButton(aviso, fg_color='green', text="Ok", font=('Tahoma bold', 13), command=aviso.destroy)
+t.place(x=30,y=15)
+t = custom.CTkButton(aviso, fg_color='dark red', text="Ok", font=('Tahoma bold', 13), command=aviso.destroy)
 t.place(x=150,y=50)
 
 # Nome do cliente
